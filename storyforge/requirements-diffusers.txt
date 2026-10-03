@@ -1,0 +1,8 @@
+# Install with: pip install -r requirements-diffusers.txt
+# Needed only if you set STORYFORGE_IMAGE_BACKEND=diffusers for fully
+# offline, no-internet image generation on your own GPU.
+torch
+diffusers
+transformers
+accelerate
+safetensors

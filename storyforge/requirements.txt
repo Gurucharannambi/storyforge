@@ -1,0 +1,21 @@
+# Core web server
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+python-multipart==0.0.19
+requests==2.32.3
+python-dotenv==1.0.1
+
+# Database (SQLite built in; psycopg2 lets you use a cloud Postgres instead)
+SQLAlchemy==2.0.36
+psycopg2-binary==2.9.10
+
+# --- Optional: only needed if STORYFORGE_IMAGE_BACKEND=diffusers -----------
+# Uncomment (or `pip install -r requirements-diffusers.txt`) to run image
+# generation fully locally with HuggingFace diffusers instead of the free
+# hosted Pollinations.ai backend.
+# torch
+# diffusers
+# transformers
+# accelerate
+# safetensors

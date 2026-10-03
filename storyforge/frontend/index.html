@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StoryForge — a local storybook workshop</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#1E2433">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <aside class="bindery">
+    <div class="bindery-mark">
+      <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 6c6-3 12-3 22 0v18c-10-3-16-3-22 0V6z" stroke="#E7DAB4" stroke-width="1.4" stroke-linejoin="round"/>
+        <path d="M15 6v18" stroke="#E7DAB4" stroke-width="1.2"/>
+      </svg>
+      <span>StoryForge</span>
+    </div>
+
+    <button class="new-story-btn" id="btn-new-story">+ New story</button>
+
+    <nav class="shelf" id="project-shelf">
+      <div class="shelf-label">Your shelf</div>
+      <div class="shelf-empty" id="shelf-empty">No stories yet — start one above.</div>
+      <ul class="shelf-list" id="shelf-list"></ul>
+    </nav>
+
+    <div class="bindery-status" id="health-status">
+      <div class="status-row"><span class="dot" id="dot-llm"></span><span id="text-llm">Checking story model…</span></div>
+      <div class="status-row"><span class="dot" id="dot-image"></span><span id="text-image">Checking illustrator…</span></div>
+    </div>
+  </aside>
+
+  <main class="desk" id="desk">
+    <!-- Views are swapped in here by app.js -->
+  </main>
+
+</div>
+
+<template id="tpl-view-new">
+  <section class="view view-new">
+    <header class="view-head">
+      <h1>Start a new story</h1>
+      <p>Tell StoryForge what you're imagining — it writes the story, keeps track of who's who, and paints a picture for every scene.</p>
+    </header>
+
+    <form id="form-new-story" class="story-form">
+      <label class="field">
+        <span>What's the story about?</span>
+        <textarea name="idea" rows="3" required placeholder="A shy lighthouse keeper's daughter who can talk to storms, and has to calm one down before it swallows the village…"></textarea>
+      </label>
+
+      <div class="field-row">
+        <label class="field">
+          <span>Genre</span>
+          <select name="genre">
+            <option>Adventure</option>
+            <option>Fairy tale</option>
+            <option>Fantasy</option>
+            <option>Science fiction</option>
+            <option>Mystery</option>
+            <option>Bedtime story</option>
+            <option>Comedy</option>
+            <option>Folk tale</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Reader age</span>
+          <select name="target_age">
+            <option value="early readers (3-6)">Early readers (3–6)</option>
+            <option value="middle-grade (8-12)" selected>Middle-grade (8–12)</option>
+            <option value="young adult (13-17)">Young adult (13–17)</option>
+            <option value="all ages">All ages</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="field-row">
+        <label class="field">
+          <span>Art style</span>
+          <select name="art_style">
+            <option value="whimsical children's book watercolor">Watercolor storybook</option>
+            <option value="soft pastel crayon illustration">Pastel crayon</option>
+            <option value="warm hand-painted folk art">Hand-painted folk art</option>
+            <option value="detailed fantasy digital painting">Fantasy digital painting</option>
+            <option value="flat vector illustration, bold shapes">Flat vector, bold shapes</option>
+            <option value="vintage 1960s storybook screenprint">Vintage screenprint</option>
+            <option value="cozy ink and watercolor sketch">Ink & watercolor sketch</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Number of scenes</span>
+          <input type="number" name="num_scenes" min="1" max="20" value="6">
+        </label>
+      </div>
+
+      <button type="submit" class="btn-primary" id="btn-generate-story">Write the story</button>
+    </form>
+
+    <div class="progress-block hidden" id="story-progress">
+      <div class="spinner"></div>
+      <p id="story-progress-text">Writing your story — this can take a minute on a local model…</p>
+    </div>
+
+    <div class="error-block hidden" id="story-error"></div>
+  </section>
+</template>
+
+<template id="tpl-view-book">
+  <section class="view view-book">
+    <header class="book-head">
+      <div>
+        <div class="book-eyebrow" id="book-genre"></div>
+        <h1 id="book-title"></h1>
+        <p id="book-synopsis"></p>
+      </div>
+      <div class="book-actions">
+        <button class="btn-ghost" id="btn-illustrate-all">Illustrate all scenes</button>
+        <a class="btn-ghost" id="btn-download" href="#" download>Download storybook</a>
+      </div>
+    </header>
+
+    <div class="image-progress hidden" id="image-progress">
+      <div class="bar"><div class="bar-fill" id="image-progress-fill"></div></div>
+      <p id="image-progress-text"></p>
+    </div>
+
+    <div class="cast" id="book-cast"></div>
+
+    <div class="pages" id="book-pages"></div>
+  </section>
+</template>
+
+<template id="tpl-scene-page">
+  <article class="page">
+    <div class="page-art">
+      <img class="page-img hidden" alt="">
+      <div class="page-art-empty">
+        <button class="btn-illustrate">Illustrate this scene</button>
+      </div>
+      <div class="page-art-loading hidden">
+        <div class="spinner small"></div>
+        <span>Painting…</span>
+      </div>
+      <div class="page-art-error hidden"></div>
+    </div>
+    <div class="page-body">
+      <div class="page-meta">
+        <span class="page-num"></span>
+        <span class="page-mood"></span>
+      </div>
+      <h2 class="page-title"></h2>
+      <p class="page-text"></p>
+      <div class="page-tools">
+        <button class="btn-text-sm btn-edit-text">Edit text</button>
+        <button class="btn-text-sm btn-redo-image">Repaint this scene</button>
+      </div>
+      <div class="page-edit hidden">
+        <textarea class="edit-direction" placeholder="Optional: tell it what to change, e.g. 'make the ending warmer' — leave blank to just polish it."></textarea>
+        <div class="page-edit-actions">
+          <button class="btn-text-sm btn-edit-cancel">Cancel</button>
+          <button class="btn-primary-sm btn-edit-submit">Rewrite scene</button>
+        </div>
+      </div>
+    </div>
+  </article>
+</template>
+
+<script src="/app.js"></script>
+</body>
+</html>
